@@ -147,6 +147,7 @@ case $bootloader in
 esac
 
 # add user
-useradd -mG wheel -s /usr/bin/zsh $user
+useradd -mG wheel -s /usr/bin/zsh "$user"
 touch /home/$user/.zshrc
-passwd $user
+chown "$user":"$usher" /home/"$user"/.zshrc
+passwd "$user"
