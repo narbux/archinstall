@@ -66,7 +66,7 @@ Name=enp1s0
 DHCP=yes
 EOF
 
-echo <<'EOF' >> /etc/ssh/sshd_config.d/custom.conf
+cat <<'EOF' >> /etc/ssh/sshd_config.d/50-custom.conf
 PermitRootLogin no
 StrictModes yes
 PubkeyAuthentication yes
