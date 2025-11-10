@@ -66,12 +66,14 @@ Name=enp1s0
 DHCP=yes
 EOF
 
-# change ssh settings
-sed -i '/#PermitRootLogin prohibit-password/c\PermitRootLogin no' /etc/ssh/sshd_config
-sed -i '/#StrictModes yes/c\StrictModes yes' /etc/ssh/sshd_config
-sed -i '/#PubkeyAuthentication yes/c\PubkeyAuthentication yes' /etc/ssh/sshd_config
-sed -i '/#PasswordAuthentication yes/c\PasswordAuthentication no' /etc/ssh/sshd_config
-sed -i '/#PermitEmptyPasswords no/c\PermitEmptyPasswords no' /etc/ssh/sshd_config
+echo <<'EOF' >> /etc/ssh/sshd_config.d/custom.conf
+PermitRootLogin no
+StrictModes yes
+PubkeyAuthentication yes
+PasswordAuthentication no
+PermitEmptyPasswords no
+PrintMotd yes
+EOF
 
 # change pacman settings
 sed -i '/#VerbosePkgLists/c\VerbosePkgLists' /etc/pacman.conf
