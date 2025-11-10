@@ -90,9 +90,10 @@ cat <<'EOF' > /etc/xdg/reflector/reflector.conf
 EOF
 
 # enable systemd services
-systemctl enable systemd-networkd systemd-resolved
+systemctl enable systemd-networkd.service systemd-resolved.service
+systemctl enable systemd-boot-update.service
 systemctl enable reflector.timer
-systemctl enable sshd
+systemctl enable sshd.service
 
 configuki()
 {
