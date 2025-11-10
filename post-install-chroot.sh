@@ -94,10 +94,10 @@ systemctl enable sshd
 
 configuki()
 {
-    sed -i '/HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)/c\HOOKS=(systemd autodetect microcode modconf kms keyboard sd-vconsole block filesystems fsck)' /etc/mkinitcpio.conf
-    echo 'rw' >> /etc/kernel/cmdline
+    # sed -i '/HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)/c\HOOKS=(systemd autodetect microcode modconf kms keyboard sd-vconsole block filesystems fsck)' /etc/mkinitcpio.conf
+    echo 'root=/dev/vda2 rw nowatchdog' >> /etc/kernel/cmdline
     echo 'KEYMAP=us' >> /etc/vconsole.conf
-    sed -i "/PRESETS=('default' 'fallback')/c\PRESETS=('default')" /etc/mkinitcpio.d/linux.preset
+    # sed -i "/PRESETS=('default' 'fallback')/c\PRESETS=('default')" /etc/mkinitcpio.d/linux.preset
     sed -i '/default_image/c\#default_image' /etc/mkinitcpio.d/linux.preset
     sed -i '/#default_uki/c\default_uki="/efi/EFI/Linux/arch-linux.efi"' /etc/mkinitcpio.d/linux.preset
     mkinitcpio -P
