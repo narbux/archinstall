@@ -42,7 +42,7 @@ pacman -S --noconfirm \
     sudo \
     openssh \
     reflector \
-    exa \
+    eza \
     zoxide \
     bat \
     podman \
