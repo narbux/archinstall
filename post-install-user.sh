@@ -18,7 +18,7 @@ fi
 
 # Install PARU AUR helper
 echo -e "\t>> Downloading Paru"
-git clone --depth=1 https://aur.archlinux.org/paru-bin 1>dev/null \
+git clone --depth=1 https://aur.archlinux.org/paru-bin 1>/dev/null \
     && cd paru-bin \
     && makepkg -si --noconfirm 1>/dev/null \
     && cd ~ \
