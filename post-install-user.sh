@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-echo "** Starting userspace post install script"
+echo "** Starting userspace post install script **"
 
 # User SSH setting
 echo -e "\t>> Downloading ssh keys"
@@ -18,15 +18,15 @@ fi
 
 # Install PARU AUR helper
 echo -e "\t>> Downloading Paru"
-git clone --depth=1 https://aur.archlinux.org/paru-bin \
+git clone --depth=1 https://aur.archlinux.org/paru-bin 1>dev/null \
     && cd paru-bin \
-    && makepkg -si --noconfirm \
+    && makepkg -si --noconfirm 1>/dev/null \
     && cd ~ \
     && rm -rf paru-bin
 
 # Install and configure zsh-antidote and zsh
 echo -e "\t>> Downloading ZSH-antidote and configuring ZSH"
-paru -S --noconfirm zsh-antidote
+paru -S --noconfirm zsh-antidote 1>/dev/null
 
 cat <<'EOF' >> $HOME/.zsh_plugins.txt
 mattmc3/ez-compinit

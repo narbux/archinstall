@@ -12,16 +12,18 @@ echo "** Running post install script for root **"
 # install packages
 echo -e "\t>> Installing packages"
 pacman -S --noconfirm \
-    reflector \
-    exa \
-    zoxide \
     bat \
-    podman \
-    podman-compose \
+    btop \
+    eza \
     man-db \
     man-pages \
+    neovim \
     plocate \
     polkit \
+    podman \
+    podman-compose \
+    reflector \
+    zoxide \
     1>/dev/null
 
 # change reflector settings
@@ -33,7 +35,7 @@ cat <<'EOF' > /etc/xdg/reflector/reflector.conf
 --latest 5
 --sort rate
 EOF
-systemctl enable reflector.timer
+systemctl enable reflector.timer 1>/dev/null
 
 
 # change default settings

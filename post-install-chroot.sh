@@ -50,17 +50,12 @@ sed -i '/#Color/c\Color' /etc/pacman.conf
 echo -e "\t>> Installing packages"
 pacman -Syu 1>/dev/null && \
 pacman -S --noconfirm \
+    curl \
+    git \
+    openssh \
     sudo \
     vim \
-    openssh \
-    reflector \
-    eza \
-    zoxide \
-    bat \
-    podman \
-    podman-compose \
     zsh \
-    neovim \
     1>/dev/null
 
 # give wheel group sudo privileges
@@ -90,9 +85,9 @@ EOF
 
 # enable systemd services
 echo -e "\t>> Enabling Systemd-networkd, systemd-resolved, systemd-boot-update and sshd"
-systemctl enable systemd-networkd.service systemd-resolved.service
-systemctl enable systemd-boot-update.service
-systemctl enable sshd.service
+systemctl enable systemd-networkd.service systemd-resolved.service 1>/dev/null
+systemctl enable systemd-boot-update.service 1>/dev/null
+systemctl enable sshd.service 1>/dev/null
 
 configuki()
 {
@@ -103,17 +98,17 @@ configuki()
     # sed -i "/PRESETS=('default' 'fallback')/c\PRESETS=('default')" /etc/mkinitcpio.d/linux.preset
     sed -i '/default_image/c\#default_image' /etc/mkinitcpio.d/linux.preset
     sed -i '/#default_uki/c\default_uki="/efi/EFI/Linux/arch-linux.efi"' /etc/mkinitcpio.d/linux.preset
-    mkinitcpio -P
+    mkinitcpio -P 1>/dev/null
     rm -rf /boot/initramfs*
 }
 
 intallgrub()
 {
     echo -e "\t>> Setting up and installing Grub"
-    pacman -S --noconfirm grub
+    pacman -S --noconfirm grub 1>/dev/null
     grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=grub
     sed -i '/loglevel=3 quiet/c\loglevel=3 nowatchdog'
-    grub-mkconfig -o /boot/grub/grub.cfg
+    grub-mkconfig -o /boot/grub/grub.cfg 1>/dev/null
 }
 
 installuki()
@@ -130,11 +125,11 @@ installuki()
 installsystemdboot()
 {
     echo -e "\t>> Installing Systemd-boot"
-    bootctl install
+    bootctl install 1>/dev/null
     configuki
-    pacman -S --noconfirm sbctl
-    sbctl create-keys
-    sbctl enroll-keys -m
+    pacman -S --noconfirm sbctl 1>/dev/null
+    sbctl create-keys 1>/dev/null
+    sbctl enroll-keys -m 1>/dev/null
     sbctl sign -s /efi/EFI/Linux/arch-linux.efi
     sbctl sign -s /efi/EFI/BOOT/BOOTX64.EFI
     sbctl sign -s /efi/EFI/systemd/systemd-bootx64.efi
@@ -156,7 +151,7 @@ esac
 echo -e "\t>> Configuring user"
 useradd -mG wheel -s /usr/bin/zsh "$user"
 touch /home/$user/.zshrc
-chown "$user":"$usher" /home/"$user"/.zshrc
+chown "$user":"$user" /home/"$user"/.zshrc
 passwd "$user"
 
 echo "** DONE **"
