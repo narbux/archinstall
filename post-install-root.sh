@@ -7,10 +7,15 @@ if [ $(id -u) -ne 0 ]; then
     exit 1
 fi
 
-echo "** Running post install script for root **"
+message()
+{
+    echo -e "\e[1;31m>> \e[0m$1"
+}
+
+message "** Running post install script for root **"
 
 # install packages
-echo -e "\t>> Installing packages"
+message "Installing packages"
 pacman -S --noconfirm \
     bat \
     btop \
@@ -27,7 +32,7 @@ pacman -S --noconfirm \
     1>/dev/null
 
 # change reflector settings
-echo -e "\t>> Installing Reflector config and enabling timer"
+message "Installing Reflector config and enabling timer"
 cat <<'EOF' > /etc/xdg/reflector/reflector.conf
 --save /etc/pacman.d/mirrorlist
 --protocol https
@@ -39,11 +44,11 @@ systemctl enable reflector.timer 1>/dev/null
 
 
 # change default settings
-echo -e "\t>> Setting timezone, locales and hostname"
+message "Setting timezone, locales and hostname"
 timedatectl set-timezone Europe/Amsterdam 1>/dev/null
 timedatectl set-ntp true 1>/dev/null
 hostnamectl set-hostname archvm 1>/dev/null
 localectl set-keymap us 1>/dev/null
 localectl set-locale en_US.UTF-8 1>/dev/null
 
-echo "** DONE **"
+message "** DONE **"

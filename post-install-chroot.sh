@@ -45,7 +45,7 @@ message "** Running chroot post install script **"
 
 
 # change pacman
-message "\t>> Setting up pacman configuration"
+message "Setting up pacman configuration"
 sed -i '/#VerbosePkgLists/c\VerbosePkgLists' /etc/pacman.conf
 sed -i '/#Color/a\ILoveCandy' /etc/pacman.conf
 sed -i '/#Color/c\Color' /etc/pacman.conf

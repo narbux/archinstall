@@ -2,10 +2,16 @@
 
 set -euo pipefail
 
-echo "** Starting userspace post install script **"
+
+message()
+{
+    echo -e "\e[1;31m>> \e[0m$1"
+}
+
+message "** Starting userspace post install script **"
 
 # User SSH setting
-echo -e "\t>> Downloading ssh keys"
+message "Downloading ssh keys"
 if [[ ! -d "$HOME"/.ssh ]]; then
     mkdir $HOME/.ssh
 fi
@@ -13,19 +19,19 @@ fi
 if [[ -e /usr/bin/curl ]]; then
     curl -SsL https://github.com/narbux.keys -o .ssh/authorized_keys
 else
-    echo -e "\t>>\033[31m\033ERROR:[0m Could not find curl to download SSH keys"
+    message "ERROR: Could not find curl to download SSH keys"
 fi
 
 # Install PARU AUR helper
-echo -e "\t>> Downloading Paru"
-git clone --depth=1 https://aur.archlinux.org/paru-bin 1>/dev/null \
-    && cd paru-bin \
+message "Downloading Paru"
+git clone --depth=1 https://aur.archlinux.org/paru 1>/dev/null \
+    && cd paru \
     && makepkg -si --noconfirm 1>/dev/null \
     && cd ~ \
-    && rm -rf paru-bin
+    && rm -rf paru
 
 # Install and configure zsh-antidote and zsh
-echo -e "\t>> Downloading ZSH-antidote and configuring ZSH"
+message "Downloading ZSH-antidote and configuring ZSH"
 paru -S --noconfirm zsh-antidote 1>/dev/null
 
 cat <<'EOF' >> $HOME/.zsh_plugins.txt
@@ -61,8 +67,9 @@ autoload -Uz promptinit && promptinit && prompt pure
 
 eval "$(zoxide init zsh)"
 EOF
+source $HOME/.zshrc
 
-echo -e "\t>> Removing Bash leftover files"
+message "Removing Bash leftover files"
 rm $HOME/.bash_logout $HOME/.bash_profile $HOME/.bashrc
 
-echo "** DONE **"
+message "** DONE **"
