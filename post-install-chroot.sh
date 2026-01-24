@@ -10,10 +10,10 @@ usage()
    echo "Syntax: post-install-chroot.sh [-h] [-b grub|systemd-boot, -u USER]"
    echo "options:"
    echo "h      Print this Help."
-   echo "-b     Supply systemd-boot or grub"
    echo "-u     Set new username"
    echo
 }
+
 
 # check for root
 if [ $(id -u) -ne 0 ]; then
@@ -26,8 +26,6 @@ while getopts ":hb:u:" option; do
         h)
             usage
             exit;;
-        b)
-            bootloader=$OPTARG;;
         u)
             user=$OPTARG;;
         \?)
@@ -37,33 +35,42 @@ while getopts ":hb:u:" option; do
     esac
 done
 
-echo "** Running chroot post install script **"
+
+message()
+{
+    echo -e "\e[1;31m>> \e[0m$1"
+}
+
+message "** Running chroot post install script **"
 
 
 # change pacman
-echo -e "\t>> Setting up pacman configuration"
+message "\t>> Setting up pacman configuration"
 sed -i '/#VerbosePkgLists/c\VerbosePkgLists' /etc/pacman.conf
 sed -i '/#Color/a\ILoveCandy' /etc/pacman.conf
 sed -i '/#Color/c\Color' /etc/pacman.conf
 
 # install packages in chroot
-echo -e "\t>> Installing packages"
+message "Installing packages"
 pacman -Syu 1>/dev/null && \
 pacman -S --noconfirm \
+    apparmor \
     curl \
     git \
+    lvm2 \
     openssh \
     sudo \
+    systemd-ukify \
     vim \
     zsh \
     1>/dev/null
 
 # give wheel group sudo privileges
-echo -e "\t>> Enabling wheel sudo privileges"
+message "Enabling wheel sudo privileges"
 sed -i '/# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/c\%wheel ALL=(ALL:ALL) NOPASSWD: ALL' /etc/sudoers
 
 # add network interface for systemd-networkd
-echo -e "\t>> Setting up network configuration"
+message "Setting up network configuration"
 cat <<'EOF' >> /etc/systemd/network/wired.network
 [Match]
 Name=enp1s0
@@ -72,7 +79,7 @@ Name=enp1s0
 DHCP=yes
 EOF
 
-echo -e "\t>> Setting up SSH configuration"
+message "Setting up SSH configuration"
 cat <<'EOF' >> /etc/ssh/sshd_config.d/50-custom.conf
 PermitRootLogin no
 StrictModes yes
@@ -84,16 +91,49 @@ EOF
 
 
 # enable systemd services
-echo -e "\t>> Enabling Systemd-networkd, systemd-resolved, systemd-boot-update and sshd"
+message "Enabling Systemd-networkd and systemd-resolved"
 systemctl enable systemd-networkd.service systemd-resolved.service 1>/dev/null
+
+message "Enabling systemd-boot-update"
 systemctl enable systemd-boot-update.service 1>/dev/null
+
+message "Enabling sshd"
 systemctl enable sshd.service 1>/dev/null
+
+message "Enabling auditd"
+systemctl enable auditd.service 1>/dev/null
+
+message "Enabling apparmor"
+systemctl enable apparmor.service 1>/dev/null
+
+secureboot()
+{
+    message "Creating and enrolling secure boot keys"
+    cat <<'EOF' >> /etc/kernel/uki.conf
+[UKI]
+SecureBootSigningTool=systemd-sbsign
+SignKernel=true
+SecureBootPrivateKey=/etc/kernel/secure-boot-private-key.pem
+SecureBootCertificate=/etc/kernel/secure-boot-certificate.pem
+EOF
+    ukify genkey --config /etc/kernel/uki.conf 1>/dev/null
+    message "Installing and signing boot loader"
+    /usr/lib/systemd/systemd-sbsign sign \
+    --private-key /etc/kernel/secure-boot-private-key.pem \
+    --certificate /etc/kernel/secure-boot-certificate.pem \
+    --output /usr/lib/systemd/boot/efi/systemd-bootx64.efi.signed \
+    /usr/lib/systemd/boot/efi/systemd-bootx64.efi
+    bootctl install --secure-boot-auto-enroll yes \
+    --certificate /etc/kernel/secure-boot-certificate.pem \
+    --private-key /etc/kernel/secure-boot-private-key.pem
+    echo 'secure-boot-enroll force' >> /efi/loader/loader.conf
+}
 
 configuki()
 {
-    echo -e "\t>> Configuring Unified Kernel Image"
+    message "Configuring Unified Kernel Image"
     # sed -i '/HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)/c\HOOKS=(systemd autodetect microcode modconf kms keyboard sd-vconsole block filesystems fsck)' /etc/mkinitcpio.conf
-    echo 'root=/dev/vda2 rw nowatchdog' >> /etc/kernel/cmdline
+    echo 'root=/dev/vda2 rw audit=1 lsm=landlock,lockdown,yama,integrity,apparmor,bpf lockdown=integrity' >> /etc/kernel/cmdline
     echo 'KEYMAP=us' >> /etc/vconsole.conf
     # sed -i "/PRESETS=('default' 'fallback')/c\PRESETS=('default')" /etc/mkinitcpio.d/linux.preset
     sed -i '/default_image/c\#default_image' /etc/mkinitcpio.d/linux.preset
@@ -102,56 +142,20 @@ configuki()
     rm -rf /boot/initramfs*
 }
 
-intallgrub()
-{
-    echo -e "\t>> Setting up and installing Grub"
-    pacman -S --noconfirm grub 1>/dev/null
-    grub-install --target=x86_64-efi --efi-directory=/efi --bootloader-id=grub
-    sed -i '/loglevel=3 quiet/c\loglevel=3 nowatchdog'
-    grub-mkconfig -o /boot/grub/grub.cfg 1>/dev/null
-}
-
-installuki()
-{
-    echo -e "\t>> Installing UKI without boot loader"
-    mkdir -p /efi/EFI/Linux
-    configuki
-    efibootmgr --create --disk /dev/vda --part 1 --label "Arch Linux" --loader "\EFI\Linux\arch-linux.efi" --unicode
-    pacman -S --noconfirm sbctl
-    sbctl create-keys
-    sbctl enroll-keys -m
-    sbctl sign -s /efi/EFI/Linux/arch-linux.efi
-}
 installsystemdboot()
 {
-    echo -e "\t>> Installing Systemd-boot"
-    bootctl install 1>/dev/null
+    message "Installing Systemd-boot and enabling Secure Boot"
+    secureboot
     configuki
-    pacman -S --noconfirm sbctl 1>/dev/null
-    sbctl create-keys 1>/dev/null
-    sbctl enroll-keys -m 1>/dev/null
-    sbctl sign -s /efi/EFI/Linux/arch-linux.efi
-    sbctl sign -s /efi/EFI/BOOT/BOOTX64.EFI
-    sbctl sign -s /efi/EFI/systemd/systemd-bootx64.efi
-    sbctl sign -s /usr/lib/systemd/boot/efi/systemd-bootx64.efi -o /usr/lib/systemd/boot/efi/systemd-bootx64.efi.signed
 }
 
-case $bootloader in
-    grub) # install grub
-        installgrub;;
-    uki) # install unified kernel image
-        installuki;;
-    systemd-boot) # install systemd-boot
-        installsystemdboot;;
-    *)
-        echo "No bootloader installed";;
-esac
+installsystemdboot
 
 # add user
-echo -e "\t>> Configuring user"
+message "Configuring user"
 useradd -mG wheel -s /usr/bin/zsh "$user"
 touch /home/$user/.zshrc
 chown "$user":"$user" /home/"$user"/.zshrc
 passwd "$user"
 
-echo "** DONE **"
+message "** DONE **"
