@@ -61,7 +61,7 @@ alias tree="exa --tree"
 alias ..="cd .."
 alias cd="z"
 
-autoload -Uz promptinit && promptinit && prompt pure
+autoload -Uz promptinit && promptinit && prompt adam2
 
 eval "$(zoxide init zsh)"
 EOF
