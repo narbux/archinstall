@@ -61,6 +61,7 @@ pacman -Syu 1>/dev/null &&
     eza \
     fish \
     fd \
+    fzf \
     lazygit \
     less \
     lvm2 \
