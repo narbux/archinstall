@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -e
 
 if [ $(id -u) -ne 0 ]; then
     echo "Please run this script as root!"
@@ -13,23 +13,6 @@ message()
 }
 
 message "** Running post install script for root **"
-
-# install packages
-message "Installing packages"
-pacman -S --noconfirm \
-    bat \
-    btop \
-    eza \
-    man-db \
-    man-pages \
-    neovim \
-    plocate \
-    polkit \
-    podman \
-    podman-compose \
-    reflector \
-    zoxide \
-    1>/dev/null
 
 # change reflector settings
 message "Installing Reflector config and enabling timer"

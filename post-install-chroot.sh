@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -e
 
 usage()
 {
@@ -55,13 +55,28 @@ message "Installing packages"
 pacman -Syu 1>/dev/null && \
 pacman -S --noconfirm \
     apparmor \
+    bat \
+    btop \
+    btrfs-progs \
     curl \
     git \
+    eza \
+    fd \
+    lazygit \
+    less \
     lvm2 \
+    man-db \
+    man-pages \
+    neovim \
     openssh \
-    sudo \
+    polkit \
+    podman \
+    podman-compose \
+    reflector \
+    ripgrep \
     systemd-ukify \
     vim \
+    zoxide \
     zsh \
     1>/dev/null
 
@@ -81,10 +96,10 @@ EOF
 
 message "Setting up SSH configuration"
 cat <<'EOF' >> /etc/ssh/sshd_config.d/50-custom.conf
-PermitRootLogin no
+PermitRootLogin yes
 StrictModes yes
 PubkeyAuthentication yes
-PasswordAuthentication no
+PasswordAuthentication yes
 PermitEmptyPasswords no
 PrintMotd yes
 EOF
@@ -118,15 +133,16 @@ SecureBootCertificate=/etc/kernel/secure-boot-certificate.pem
 EOF
     ukify genkey --config /etc/kernel/uki.conf 1>/dev/null
     message "Installing and signing boot loader"
+
     /usr/lib/systemd/systemd-sbsign sign \
     --private-key /etc/kernel/secure-boot-private-key.pem \
     --certificate /etc/kernel/secure-boot-certificate.pem \
     --output /usr/lib/systemd/boot/efi/systemd-bootx64.efi.signed \
     /usr/lib/systemd/boot/efi/systemd-bootx64.efi
+
     bootctl install --secure-boot-auto-enroll yes \
     --certificate /etc/kernel/secure-boot-certificate.pem \
     --private-key /etc/kernel/secure-boot-private-key.pem
-    echo 'secure-boot-enroll force' >> /efi/loader/loader.conf
 }
 
 configuki()
@@ -153,9 +169,7 @@ installsystemdboot
 
 # add user
 message "Configuring user"
-useradd -mG wheel -s /usr/bin/zsh "$user"
-touch /home/$user/.zshrc
-chown "$user":"$user" /home/"$user"/.zshrc
+useradd -mG wheel -s /usr/bin/fish "$user"
 passwd "$user"
 
 message "** DONE **"

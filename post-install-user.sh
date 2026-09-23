@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+set -e
 
 message() {
   echo -e "\e[1;31m>> \e[0m$1"
@@ -28,6 +28,9 @@ git clone --depth=1 https://aur.archlinux.org/paru 1>/dev/null &&
   cd ~ &&
   rm -rf paru
 
+message "Setting up LazyVim"
+git clone https://github.com/lazyvim/starter.git $HOME/.config/nvim 1>/dev/null
+
 # Install and configure zsh-antidote and zsh
 message "Downloading ZSH-antidote and configuring ZSH"
 paru -S --noconfirm zsh-antidote 1>/dev/null
@@ -50,14 +53,14 @@ source '/usr/share/zsh-antidote/antidote.zsh'
 antidote load
 
 chpwd() {
-    exa
+    eza
 }
 
 alias cat="bat -pp"
 alias vim="nvim"
-alias ls="exa"
-alias ll="exa -lah"
-alias tree="exa --tree"
+alias ls="eza"
+alias ll="eza -lah"
+alias tree="eza --tree"
 alias ..="cd .."
 alias cd="z"
 
