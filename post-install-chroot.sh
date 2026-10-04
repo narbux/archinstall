@@ -125,10 +125,16 @@ secureboot() {
   cat <<'EOF' >>/etc/kernel/uki.conf
 [UKI]
 SecureBootSigningTool=systemd-sbsign
-SignKernel=true
 SecureBootPrivateKey=/etc/kernel/secure-boot-private-key.pem
 SecureBootCertificate=/etc/kernel/secure-boot-certificate.pem
+SignKernel=true
+SignInitrdPCRs=true
+
+[PCRSignature:all]
+PCRPrivateKey=/etc/systemd/tpm2-pcr-private-key.pem
+PCRPublicKey=/etc/systemd/tpm2-pcr-public-key.pem
 EOF
+
   ukify genkey --config /etc/kernel/uki.conf 1>/dev/null
   message "Installing and signing boot loader"
 
